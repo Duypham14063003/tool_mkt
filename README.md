@@ -6,6 +6,40 @@ Monolithic Flask dashboard that connects Facebook Pages and TikTok accounts, sto
 
 Requirements: Python 3.10+, MySQL 8+, a Meta app, and a TikTok developer app.
 
+### Start MySQL with Docker
+
+Copy the example environment once, then start the database:
+
+```bash
+cp .env.example .env
+docker compose up -d db
+docker compose ps
+```
+
+The Compose service publishes MySQL on local port `3307` by default to avoid conflicting with an existing MySQL installation. On the first start, MySQL automatically creates the `social_dashboard` database, application user, tables, indexes, and foreign key using `docker/mysql/init/001-schema.sql`. Data persists in the `social_dashboard_mysql` volume.
+
+After the database reports `healthy`, run Flask on the host so Playwright can open the interactive Chrome window:
+
+```bash
+source .venv/bin/activate
+flask --app app run --debug
+```
+
+To stop MySQL without deleting data:
+
+```bash
+docker compose down
+```
+
+To intentionally delete the local database and recreate it from the initialization SQL:
+
+```bash
+docker compose down -v
+docker compose up -d db
+```
+
+`docker compose down -v` permanently deletes local database data; do not use it when the volume contains data you need.
+
 ```bash
 cd social_dashboard
 python3 -m venv .venv
