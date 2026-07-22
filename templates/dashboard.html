@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | SocialScope{% endblock %}
+{% block content %}
+<div id="dashboard" data-facebook-connected="{{ 'true' if connections.get('facebook') else 'false' }}" data-tiktok-connected="{{ 'true' if connections.get('tiktok') else 'false' }}">
+    <div class="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+            <h1 class="text-2xl font-bold md:text-3xl">Channel performance</h1>
+            <p class="mt-1 text-sm text-zinc-500">Facebook and TikTok activity in one view.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            {% for platform, label, icon, active_class in [
+                ('facebook', 'Facebook', 'facebook', 'connection-facebook'),
+                ('tiktok', 'TikTok', 'music-2', 'connection-tiktok')
+            ] %}
+                {% if connections.get(platform) %}
+                <div class="connection-control {{ active_class }}">
+                    <span class="flex items-center gap-2 px-3 py-2 text-sm font-semibold">
+                        <i data-lucide="{{ icon }}" class="h-4 w-4"></i>
+                        {{ label }}
+                        <span class="h-2 w-2 rounded-full bg-emerald-500" title="Connected"></span>
+                    </span>
+                    <form method="post" action="{{ url_for('disconnect', platform=platform) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="icon-button-small" aria-label="Disconnect {{ label }}" title="Disconnect {{ label }}">
+                            <i data-lucide="x" class="h-3.5 w-3.5"></i>
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <a href="{{ url_for(platform + '_auth') }}" class="secondary-button">
+                    <i data-lucide="{{ icon }}" class="h-4 w-4"></i>
+                    Connect {{ label }}
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="dataNotice" class="mb-5 hidden rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"></div>
+
+    <section class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
+        <article class="metric-card">
+            <div class="metric-icon bg-blue-50 text-blue-700"><i data-lucide="eye" class="h-5 w-5"></i></div>
+            <p class="metric-label">Total views</p>
+            <p id="totalViews" class="metric-value">--</p>
+            <p class="metric-meta">Across connected channels</p>
+        </article>
+        <article class="metric-card">
+            <div class="metric-icon bg-emerald-50 text-emerald-700"><i data-lucide="mouse-pointer-click" class="h-5 w-5"></i></div>
+            <p class="metric-label">Total engagement</p>
+            <p id="totalEngagement" class="metric-value">--</p>
+            <p class="metric-meta">Reactions, comments and shares</p>
+        </article>
+        <article class="metric-card">
+            <div class="metric-icon bg-amber-50 text-amber-700"><i data-lucide="files" class="h-5 w-5"></i></div>
+            <p class="metric-label">Published content</p>
+            <p id="contentCount" class="metric-value">--</p>
+            <p class="metric-meta">Posts and videos analyzed</p>
+        </article>
+        <article class="metric-card">
+            <div class="metric-icon bg-fuchsia-50 text-fuchsia-700"><i data-lucide="activity" class="h-5 w-5"></i></div>
+            <p class="metric-label">Engagement rate</p>
+            <p id="engagementRate" class="metric-value">--</p>
+            <p class="metric-meta">Engagements per view</p>
+        </article>
+    </section>
+
+    <section class="mb-6 grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+        <article class="panel">
+            <div class="panel-header">
+                <div><h2 class="panel-title">Daily view trend</h2><p class="panel-subtitle">Views by publishing date</p></div>
+                <i data-lucide="trending-up" class="h-5 w-5 text-zinc-400"></i>
+            </div>
+            <div class="chart-container"><canvas id="viewsChart"></canvas></div>
+        </article>
+        <article class="panel">
+            <div class="panel-header">
+                <div><h2 class="panel-title">Content engagement</h2><p class="panel-subtitle">Highest-performing posts</p></div>
+                <i data-lucide="bar-chart-3" class="h-5 w-5 text-zinc-400"></i>
+            </div>
+            <div class="chart-container"><canvas id="engagementChart"></canvas></div>
+        </article>
+    </section>
+
+    <section class="panel overflow-hidden">
+        <div class="panel-header">
+            <div><h2 class="panel-title">Top content</h2><p class="panel-subtitle">Ranked by total engagement</p></div>
+            <span id="lastUpdated" class="text-xs text-zinc-500"></span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[680px] text-left text-sm">
+                <thead class="border-y border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase text-zinc-500">
+                    <tr><th class="px-5 py-3">Content</th><th class="px-5 py-3">Channel</th><th class="px-5 py-3 text-right">Views</th><th class="px-5 py-3 text-right">Engagement</th><th class="px-5 py-3 text-right">Avg. watch</th></tr>
+                </thead>
+                <tbody id="contentTable" class="divide-y divide-zinc-100">
+                    <tr><td colspan="5" class="px-5 py-10 text-center text-zinc-500">Loading performance data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>{% endblock %}
+

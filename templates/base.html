@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en" class="h-full bg-zinc-50">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}SocialScope{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full text-zinc-900 antialiased">
+    {% block body %}
+    <div class="min-h-full lg:grid lg:grid-cols-[240px_1fr]">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-zinc-200 bg-zinc-950 text-white lg:block">
+            <div class="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+                <span class="grid h-8 w-8 place-items-center rounded-md bg-emerald-400 text-zinc-950">
+                    <i data-lucide="chart-no-axes-combined" class="h-5 w-5"></i>
+                </span>
+                <span class="text-lg font-bold">SocialScope</span>
+            </div>
+            <nav class="p-3" aria-label="Primary navigation">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 rounded-md bg-white/10 px-3 py-2.5 text-sm font-medium">
+                    <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+                    Overview
+                </a>
+            </nav>
+            <div class="absolute inset-x-0 bottom-0 border-t border-white/10 p-3">
+                <div class="mb-3 truncate px-2 text-xs text-zinc-400">{{ user.email if user else '' }}</div>
+                <form method="post" action="{{ url_for('logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-zinc-300 hover:bg-white/10 hover:text-white" type="submit">
+                        <i data-lucide="log-out" class="h-4 w-4"></i>
+                        Sign out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="lg:col-start-2">
+            <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/95 px-4 backdrop-blur md:px-8">
+                <div class="flex items-center gap-3">
+                    <button id="menuButton" class="icon-button lg:hidden" type="button" aria-label="Open navigation">
+                        <i data-lucide="menu" class="h-5 w-5"></i>
+                    </button>
+                    <div>
+                        <p class="text-sm font-semibold">Performance overview</p>
+                        <p class="hidden text-xs text-zinc-500 sm:block">Cross-platform reporting</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-zinc-500">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                    Live data
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="flash-message mb-5 flex items-center gap-3 rounded-md border px-4 py-3 text-sm {{ 'border-red-200 bg-red-50 text-red-800' if category == 'error' else 'border-emerald-200 bg-emerald-50 text-emerald-800' }}">
+                            <i data-lucide="{{ 'circle-alert' if category == 'error' else 'circle-check' }}" class="h-4 w-4 shrink-0"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    <div id="sidebarBackdrop" class="fixed inset-0 z-30 hidden bg-black/40 lg:hidden"></div>
+    {% endblock %}
+    <script>
+        lucide.createIcons();
+        const menuButton = document.getElementById('menuButton');
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (menuButton && sidebar && backdrop) {
+            const toggleMenu = () => {
+                sidebar.classList.toggle('hidden');
+                backdrop.classList.toggle('hidden');
+            };
+            menuButton.addEventListener('click', toggleMenu);
+            backdrop.addEventListener('click', toggleMenu);
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+
